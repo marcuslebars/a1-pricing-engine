@@ -4,14 +4,37 @@
 //   Marine Storage (a1marinestorage.ca): calculateQuote + STORAGE
 //
 // All prices live in ./pricing.config.json.
+//
+// Values are re-exported explicitly (not `export *`) so they are detectable by
+// Node's CommonJS named-export lexer when the built CJS package is imported from
+// an ESM context (the storage server runs this way).
 
-export * from "./config";
-export * from "./marine-care";
-export * from "./storage";
+// ── Marine Care ──────────────────────────────────────────────────────────────
 export {
-  perFootCents,
-  applyMinimum,
-  discountCents,
-  additionalEngineUnitCents,
-  formatCents,
-} from "./money";
+  SERVICE_STARTING_RATE_BY_SLUG,
+  getServiceStartingRateBySlug,
+  getServiceStartingPriceLabel,
+  calculateGelcoat,
+  calculateExterior,
+  calculateInterior,
+  calculateCeramic,
+  calculateGraphene,
+  calculateWetSanding,
+  calculateBottomPainting,
+  calculateVinyl,
+  calculateWeeklyMaintenance,
+  calculateBiweeklyMaintenance,
+  calculateTotal,
+} from "./marine-care";
+export type * from "./marine-care";
+
+// ── Config views ─────────────────────────────────────────────────────────────
+export { CARE, STORAGE, RAW_CONFIG } from "./config";
+export type * from "./config";
+
+// ── Storage engine ───────────────────────────────────────────────────────────
+export { calculateQuote } from "./storage";
+export type * from "./storage";
+
+// ── Money helpers ────────────────────────────────────────────────────────────
+export { perFootCents, applyMinimum, discountCents, additionalEngineUnitCents, formatCents } from "./money";

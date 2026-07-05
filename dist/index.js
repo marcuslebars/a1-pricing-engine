@@ -5,25 +5,37 @@
 //   Marine Storage (a1marinestorage.ca): calculateQuote + STORAGE
 //
 // All prices live in ./pricing.config.json.
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
+//
+// Values are re-exported explicitly (not `export *`) so they are detectable by
+// Node's CommonJS named-export lexer when the built CJS package is imported from
+// an ESM context (the storage server runs this way).
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatCents = exports.additionalEngineUnitCents = exports.discountCents = exports.applyMinimum = exports.perFootCents = void 0;
-__exportStar(require("./config"), exports);
-__exportStar(require("./marine-care"), exports);
-__exportStar(require("./storage"), exports);
+exports.formatCents = exports.additionalEngineUnitCents = exports.discountCents = exports.applyMinimum = exports.perFootCents = exports.calculateQuote = exports.RAW_CONFIG = exports.STORAGE = exports.CARE = exports.calculateTotal = exports.calculateBiweeklyMaintenance = exports.calculateWeeklyMaintenance = exports.calculateVinyl = exports.calculateBottomPainting = exports.calculateWetSanding = exports.calculateGraphene = exports.calculateCeramic = exports.calculateInterior = exports.calculateExterior = exports.calculateGelcoat = exports.getServiceStartingPriceLabel = exports.getServiceStartingRateBySlug = exports.SERVICE_STARTING_RATE_BY_SLUG = void 0;
+// ── Marine Care ──────────────────────────────────────────────────────────────
+var marine_care_1 = require("./marine-care");
+Object.defineProperty(exports, "SERVICE_STARTING_RATE_BY_SLUG", { enumerable: true, get: function () { return marine_care_1.SERVICE_STARTING_RATE_BY_SLUG; } });
+Object.defineProperty(exports, "getServiceStartingRateBySlug", { enumerable: true, get: function () { return marine_care_1.getServiceStartingRateBySlug; } });
+Object.defineProperty(exports, "getServiceStartingPriceLabel", { enumerable: true, get: function () { return marine_care_1.getServiceStartingPriceLabel; } });
+Object.defineProperty(exports, "calculateGelcoat", { enumerable: true, get: function () { return marine_care_1.calculateGelcoat; } });
+Object.defineProperty(exports, "calculateExterior", { enumerable: true, get: function () { return marine_care_1.calculateExterior; } });
+Object.defineProperty(exports, "calculateInterior", { enumerable: true, get: function () { return marine_care_1.calculateInterior; } });
+Object.defineProperty(exports, "calculateCeramic", { enumerable: true, get: function () { return marine_care_1.calculateCeramic; } });
+Object.defineProperty(exports, "calculateGraphene", { enumerable: true, get: function () { return marine_care_1.calculateGraphene; } });
+Object.defineProperty(exports, "calculateWetSanding", { enumerable: true, get: function () { return marine_care_1.calculateWetSanding; } });
+Object.defineProperty(exports, "calculateBottomPainting", { enumerable: true, get: function () { return marine_care_1.calculateBottomPainting; } });
+Object.defineProperty(exports, "calculateVinyl", { enumerable: true, get: function () { return marine_care_1.calculateVinyl; } });
+Object.defineProperty(exports, "calculateWeeklyMaintenance", { enumerable: true, get: function () { return marine_care_1.calculateWeeklyMaintenance; } });
+Object.defineProperty(exports, "calculateBiweeklyMaintenance", { enumerable: true, get: function () { return marine_care_1.calculateBiweeklyMaintenance; } });
+Object.defineProperty(exports, "calculateTotal", { enumerable: true, get: function () { return marine_care_1.calculateTotal; } });
+// ── Config views ─────────────────────────────────────────────────────────────
+var config_1 = require("./config");
+Object.defineProperty(exports, "CARE", { enumerable: true, get: function () { return config_1.CARE; } });
+Object.defineProperty(exports, "STORAGE", { enumerable: true, get: function () { return config_1.STORAGE; } });
+Object.defineProperty(exports, "RAW_CONFIG", { enumerable: true, get: function () { return config_1.RAW_CONFIG; } });
+// ── Storage engine ───────────────────────────────────────────────────────────
+var storage_1 = require("./storage");
+Object.defineProperty(exports, "calculateQuote", { enumerable: true, get: function () { return storage_1.calculateQuote; } });
+// ── Money helpers ────────────────────────────────────────────────────────────
 var money_1 = require("./money");
 Object.defineProperty(exports, "perFootCents", { enumerable: true, get: function () { return money_1.perFootCents; } });
 Object.defineProperty(exports, "applyMinimum", { enumerable: true, get: function () { return money_1.applyMinimum; } });
