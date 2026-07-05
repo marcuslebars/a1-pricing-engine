@@ -43,8 +43,35 @@ Single canonical source — no vendored copies.
   ```json
   "@a1/pricing-engine": "file:../../a1-pricing-engine"
   ```
-- **For deploy**: push this folder to its own git repo and pin a tag in each site:
+- **For deploy** (current): each site pins the published tag over HTTPS:
   ```json
-  "@a1/pricing-engine": "github:<org>/a1-pricing-engine#v1.0.0"
+  "@a1/pricing-engine": "git+https://github.com/marcuslebars/a1-pricing-engine.git#v1.0.0"
   ```
-  npm (Marine Care) and pnpm (Marine Storage) both resolve git dependencies natively; the pinned tag keeps deploys reproducible.
+  npm (Marine Care) and pnpm (Marine Storage) both resolve git dependencies natively; the pinned tag keeps deploys reproducible. **Consistency between the two sites comes from this version pin — there are no vendored/synced copies, and no drift-test is needed.**
+
+## Directory layout for local development
+
+The `file:` link (used only when hacking on the engine locally) is `../../a1-pricing-engine`, so clone the three repos as siblings with the engine **two directories above each app's `package.json`**:
+
+```
+<workspace>/
+├── a1-pricing-engine/                     # this repo
+├── a1marinecare-main (1)/
+│   └── a1marinecare-main/                 # Care app  → ../../a1-pricing-engine
+└── a1marinestorage-main/
+    └── a1marinestorage-main/              # Storage app → ../../a1-pricing-engine
+```
+
+Local-dev loop:
+
+1. In the consuming app, switch the dependency to `"@a1/pricing-engine": "file:../../a1-pricing-engine"` and install.
+2. Edit `src/`, then **`npm run build`** here (the built `dist/` is committed and is what consumers load).
+3. Run `npm test` here (engine unit tests incl. the four storage contract check-cases).
+
+## Release a new version
+
+1. `npm run build` + `npm test`, commit `src/` **and** `dist/`.
+2. `git push && git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. Bump the `#vX.Y.Z` pin in each site's `package.json` and reinstall. On the Care side the golden suite must still pass exact-match.
+
+(If your checkout isn't double-nested like the shipped downloads, adjust the `../` count in the `file:` path so it points at this repo.)
