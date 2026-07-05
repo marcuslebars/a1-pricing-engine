@@ -213,11 +213,14 @@ function resolveBundleServices(bundleId: string, items: QuoteItemInput[]): strin
   if (!bundle) throw new Error(`Unknown bundle: "${bundleId}".`);
   return bundle.services.flatMap((serviceId) => {
     if (serviceId === "winterization_*") {
-      const winItem = items.find((it) => it.serviceId.startsWith("winterization_"));
-      if (!winItem) {
+      // Resolve to ALL winterization lines in the cart, so bundle eligibility is
+      // order-independent and every winterization line the customer chose is
+      // discounted (matches "bundle discount applies to the combined eligible total").
+      const winIds = items.filter((it) => it.serviceId.startsWith("winterization_")).map((it) => it.serviceId);
+      if (winIds.length === 0) {
         throw new Error(`Bundle "${bundle.label}" requires a winterization service in the item list.`);
       }
-      return [winItem.serviceId];
+      return winIds;
     }
     return [serviceId];
   });

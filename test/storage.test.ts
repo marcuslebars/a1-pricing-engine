@@ -150,4 +150,20 @@ describe("storage engine — rules & edge cases", () => {
     // A bundle whose required services are missing.
     expect(() => calculateQuote({ serviceLine: "storage", bundleId: "winter_ready_plus", items: [storage(24), wrap(24)] })).toThrow(/requires a winterization/);
   });
+
+  it("bundle winterization_* resolves to ALL winterization lines (order-independent, all discounted)", () => {
+    const build = (win: QuoteItemInput[]) =>
+      calculateQuote({
+        serviceLine: "storage",
+        hullType: "cruiser",
+        bundleId: "full_care",
+        items: [storage(30), wrap(30), { serviceId: "fall_detail", lengthFt: 30 }, { serviceId: "spring_commissioning" }, ...win],
+      });
+    const a = build([{ serviceId: "winterization_inboard", engineCount: 2 }, { serviceId: "winterization_outboard", engineCount: 1 }]);
+    const b = build([{ serviceId: "winterization_outboard", engineCount: 1 }, { serviceId: "winterization_inboard", engineCount: 2 }]);
+    // À-la-carte 382125 → 12% off the full eligible total → 336270, regardless of item order.
+    expect(a.subtotalCents).toBe(336270);
+    expect(b.subtotalCents).toBe(336270);
+    expect(a.lineItems.filter((l) => l.serviceId.startsWith("winterization_")).every((l) => l.bundleEligible)).toBe(true);
+  });
 });
