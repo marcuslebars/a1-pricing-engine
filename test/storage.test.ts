@@ -5,21 +5,21 @@ const storage = (lengthFt: number): QuoteItemInput => ({ serviceId: "outdoor_sto
 const wrap = (lengthFt: number): QuoteItemInput => ({ serviceId: "shrink_wrap", lengthFt });
 
 describe("storage engine — brief check cases (exact, to the cent)", () => {
-  it("24ft bowrider, Winter Ready → $1,536.00 à-la-carte, $1,413.12 after 8%", () => {
+  it("24ft bowrider, Winter Ready → $1,800.00 à-la-carte, $1,656.00 after 8%", () => {
     const r = calculateQuote({
       serviceLine: "storage",
       hullType: "bowrider",
       bundleId: "winter_ready",
       items: [storage(24), wrap(24)],
     });
-    expect(r.lineItems.find((l) => l.serviceId === "outdoor_storage")!.amountCents).toBe(110400);
-    expect(r.lineItems.find((l) => l.serviceId === "shrink_wrap")!.amountCents).toBe(43200);
-    expect(r.aLaCarteSubtotalCents).toBe(153600);
-    expect(r.bundleSavingsCents).toBe(12288);
-    expect(r.subtotalCents).toBe(141312);
+    expect(r.lineItems.find((l) => l.serviceId === "outdoor_storage")!.amountCents).toBe(120000);
+    expect(r.lineItems.find((l) => l.serviceId === "shrink_wrap")!.amountCents).toBe(60000);
+    expect(r.aLaCarteSubtotalCents).toBe(180000);
+    expect(r.bundleSavingsCents).toBe(14400);
+    expect(r.subtotalCents).toBe(165600);
   });
 
-  it("22ft pontoon, outboard x1, Winter Ready Plus → $1,985.00 à-la-carte, $1,786.50 after 10%", () => {
+  it("22ft pontoon, outboard x1, Winter Ready Plus → $2,277.00 à-la-carte, $2,049.30 after 10%", () => {
     const r = calculateQuote({
       serviceLine: "storage",
       hullType: "pontoon",
@@ -27,24 +27,24 @@ describe("storage engine — brief check cases (exact, to the cent)", () => {
       items: [storage(22), wrap(22), { serviceId: "winterization_outboard", engineType: "outboard", engineCount: 1 }],
     });
     // Hull surcharge applies to storage + wrap (flagged), NOT winterization.
-    expect(r.lineItems.find((l) => l.serviceId === "outdoor_storage")!.amountCents).toBe(118800); // (46+8)*22
-    expect(r.lineItems.find((l) => l.serviceId === "shrink_wrap")!.amountCents).toBe(57200); // (18+8)*22
-    expect(r.lineItems.find((l) => l.serviceId === "winterization_outboard")!.amountCents).toBe(22500);
-    expect(r.aLaCarteSubtotalCents).toBe(198500);
-    expect(r.bundleSavingsCents).toBe(19850);
-    expect(r.subtotalCents).toBe(178650);
+    expect(r.lineItems.find((l) => l.serviceId === "outdoor_storage")!.amountCents).toBe(127600); // (50+8)*22
+    expect(r.lineItems.find((l) => l.serviceId === "shrink_wrap")!.amountCents).toBe(72600); // (25+8)*22
+    expect(r.lineItems.find((l) => l.serviceId === "winterization_outboard")!.amountCents).toBe(27500);
+    expect(r.aLaCarteSubtotalCents).toBe(227700);
+    expect(r.bundleSavingsCents).toBe(22770);
+    expect(r.subtotalCents).toBe(204930);
   });
 
-  it("14ft runabout, storage only → below minimum → $690.00", () => {
+  it("14ft runabout, storage only → below minimum → $750.00", () => {
     const r = calculateQuote({ serviceLine: "storage", items: [storage(14)] });
     const line = r.lineItems[0];
-    expect(line.amountCents).toBe(69000);
+    expect(line.amountCents).toBe(75000);
     expect(line.detail.minimumApplied).toBe(true);
-    expect(r.subtotalCents).toBe(69000);
+    expect(r.subtotalCents).toBe(75000);
     expect(r.bundle).toBeNull();
   });
 
-  it("28ft cruiser, twin inboards, Full Care → $3,420.25 à-la-carte, $3,009.82 after 12%", () => {
+  it("28ft cruiser, twin inboards, Full Care → $3,816.00 à-la-carte, $3,358.08 after 12%", () => {
     const r = calculateQuote({
       serviceLine: "storage",
       hullType: "cruiser",
@@ -58,33 +58,108 @@ describe("storage engine — brief check cases (exact, to the cent)", () => {
       ],
     });
     const win = r.lineItems.find((l) => l.serviceId === "winterization_inboard")!;
-    expect(win.amountCents).toBe(69125); // 39500 + round(39500*0.75)=29625
-    expect(win.detail.additionalEngineUnitCents).toBe(29625);
+    expect(win.amountCents).toBe(77900); // 44500 + 33400 (445×0.75=333.75 → $334, rounded to whole $)
+    expect(win.detail.additionalEngineUnitCents).toBe(33400);
     expect(win.detail.engineCount).toBe(2);
-    expect(r.lineItems.find((l) => l.serviceId === "fall_detail")!.amountCents).toBe(67200); // cruiser: no surcharge
-    expect(r.aLaCarteSubtotalCents).toBe(342025);
-    expect(r.bundleSavingsCents).toBe(41043);
-    expect(r.subtotalCents).toBe(300982);
+    expect(r.lineItems.find((l) => l.serviceId === "fall_detail")!.amountCents).toBe(67200); // cruiser: no surcharge (rate unchanged)
+    expect(r.aLaCarteSubtotalCents).toBe(381600);
+    expect(r.bundleSavingsCents).toBe(45792);
+    expect(r.subtotalCents).toBe(335808);
+  });
+});
+
+// 2026 storage rate increase: outdoor $46→$50/ft, shrink $18→$25/ft, winterization
+// +$50 each (outboard $275, sterndrive $400, inboard $445); minimums outdoor $750 /
+// shrink $375; additional engines round to whole dollars. These lock the exact
+// scenarios signed off for the change.
+describe("storage engine — 2026 rate increase (acceptance)", () => {
+  const amt = (id: string, L: number) =>
+    calculateQuote({ serviceLine: "storage", items: [{ serviceId: id, lengthFt: L }] }).lineItems[0].amountCents;
+  const winAmt = (id: string, et: "outboard" | "sterndrive" | "inboard", n = 1) =>
+    calculateQuote({ serviceLine: "storage", items: [{ serviceId: id, engineType: et, engineCount: n }] }).lineItems[0];
+
+  it("outdoor storage at $50/ft — 18/24/30/38 ft", () => {
+    expect(amt("outdoor_storage", 18)).toBe(90000);
+    expect(amt("outdoor_storage", 24)).toBe(120000);
+    expect(amt("outdoor_storage", 30)).toBe(150000);
+    expect(amt("outdoor_storage", 38)).toBe(190000);
+  });
+
+  it("shrink wrap at $25/ft — 18/24/30/38 ft", () => {
+    expect(amt("shrink_wrap", 18)).toBe(45000);
+    expect(amt("shrink_wrap", 24)).toBe(60000);
+    expect(amt("shrink_wrap", 30)).toBe(75000);
+    expect(amt("shrink_wrap", 38)).toBe(95000);
+  });
+
+  it("winterization single-engine flat rates: $275 / $400 / $445", () => {
+    expect(winAmt("winterization_outboard", "outboard").amountCents).toBe(27500);
+    expect(winAmt("winterization_sterndrive", "sterndrive").amountCents).toBe(40000);
+    expect(winAmt("winterization_inboard", "inboard").amountCents).toBe(44500);
+  });
+
+  it("twin sterndrive: $400 + $300 (×0.75) = $700", () => {
+    const l = winAmt("winterization_sterndrive", "sterndrive", 2);
+    expect(l.amountCents).toBe(70000);
+    expect(l.detail.additionalEngineUnitCents).toBe(30000);
+  });
+
+  it("additional-engine unit rounds to whole dollars: outboard $206, inboard $334", () => {
+    expect(winAmt("winterization_outboard", "outboard", 2).detail.additionalEngineUnitCents).toBe(20600);
+    expect(winAmt("winterization_inboard", "inboard", 2).detail.additionalEngineUnitCents).toBe(33400);
+  });
+
+  it("new minimums floor a 14ft boat: outdoor $750, shrink $375", () => {
+    const o = calculateQuote({ serviceLine: "storage", items: [storage(14)] }).lineItems[0];
+    expect(o.amountCents).toBe(75000);
+    expect(o.detail.minimumApplied).toBe(true);
+    const w = calculateQuote({ serviceLine: "storage", items: [wrap(14)] }).lineItems[0];
+    expect(w.amountCents).toBe(37500);
+    expect(w.detail.minimumApplied).toBe(true);
+  });
+
+  it("24ft sterndrive combined (storage + wrap + winterization) = $2,200 à-la-carte", () => {
+    const cart: QuoteItemInput[] = [storage(24), wrap(24), { serviceId: "winterization_sterndrive", engineType: "sterndrive", engineCount: 1 }];
+    expect(calculateQuote({ serviceLine: "storage", items: cart }).aLaCarteSubtotalCents).toBe(220000);
+  });
+
+  it("Winter Ready Plus (10%) on the 3-service cart = $1,980", () => {
+    const cart: QuoteItemInput[] = [storage(24), wrap(24), { serviceId: "winterization_sterndrive", engineType: "sterndrive", engineCount: 1 }];
+    expect(calculateQuote({ serviceLine: "storage", bundleId: "winter_ready_plus", items: cart }).subtotalCents).toBe(198000);
+  });
+
+  it("Full Care (12%) on the full 5-service cart = $3,041 à-la-carte, $2,676.08 after", () => {
+    const cart: QuoteItemInput[] = [
+      storage(24),
+      wrap(24),
+      { serviceId: "winterization_sterndrive", engineType: "sterndrive", engineCount: 1 },
+      { serviceId: "fall_detail", lengthFt: 24 },
+      { serviceId: "spring_commissioning" },
+    ];
+    const r = calculateQuote({ serviceLine: "storage", bundleId: "full_care", items: cart });
+    expect(r.aLaCarteSubtotalCents).toBe(304100);
+    expect(r.bundleSavingsCents).toBe(36492);
+    expect(r.subtotalCents).toBe(267608);
   });
 });
 
 describe("storage engine — rules & edge cases", () => {
-  it("per-foot minimum floors a short boat (shrink wrap 14ft → $270.00)", () => {
+  it("per-foot minimum floors a short boat (shrink wrap 14ft → $375.00)", () => {
     const r = calculateQuote({ serviceLine: "storage", items: [wrap(14)] });
-    expect(r.lineItems[0].amountCents).toBe(27000);
+    expect(r.lineItems[0].amountCents).toBe(37500);
     expect(r.lineItems[0].detail.minimumApplied).toBe(true);
   });
 
   it("tritoon hull surcharge is $10/ft on flagged services", () => {
     const r = calculateQuote({ serviceLine: "storage", hullType: "tritoon", items: [storage(20)] });
-    // max(4600*20, 69000)=92000 + 1000*20=20000
-    expect(r.lineItems[0].amountCents).toBe(112000);
+    // max(5000*20, 75000)=100000 + 1000*20=20000
+    expect(r.lineItems[0].amountCents).toBe(120000);
     expect(r.hullSurchargePerFootCents).toBe(1000);
   });
 
   it("hull surcharge never applies to non-flagged services (fall detail on a pontoon)", () => {
     const r = calculateQuote({ serviceLine: "storage", hullType: "pontoon", items: [{ serviceId: "fall_detail", lengthFt: 20 }] });
-    expect(r.lineItems[0].amountCents).toBe(48000); // 2400*20, no surcharge
+    expect(r.lineItems[0].amountCents).toBe(48000); // 2400*20, no surcharge (fall detail rate unchanged)
     expect(r.lineItems[0].detail.hullSurchargeCents).toBe(0);
   });
 
@@ -93,8 +168,8 @@ describe("storage engine — rules & edge cases", () => {
       serviceLine: "storage",
       items: [{ serviceId: "winterization_outboard", engineCount: 3 }],
     });
-    // 22500 + 2 * round(22500*0.75)=22500 + 2*16875 = 56250
-    expect(r.lineItems[0].amountCents).toBe(56250);
+    // 27500 + 2 * (round(27500*0.75)=20600 → $206) = 27500 + 2*20600 = 68700
+    expect(r.lineItems[0].amountCents).toBe(68700);
   });
 
   it("pontoon + bundle combine correctly (surcharge in the eligible base, then discounted)", () => {
@@ -104,10 +179,10 @@ describe("storage engine — rules & edge cases", () => {
       bundleId: "winter_ready",
       items: [storage(24), wrap(24)],
     });
-    // storage (46+8)*24=129600, wrap (18+8)*24=62400 => 192000; -8% = 176640
-    expect(r.aLaCarteSubtotalCents).toBe(192000);
-    expect(r.bundleSavingsCents).toBe(15360);
-    expect(r.subtotalCents).toBe(176640);
+    // storage (50+8)*24=139200, wrap (25+8)*24=79200 => 218400; -8% = 200928
+    expect(r.aLaCarteSubtotalCents).toBe(218400);
+    expect(r.bundleSavingsCents).toBe(17472);
+    expect(r.subtotalCents).toBe(200928);
   });
 
   it("always exposes the à-la-carte total and savings for the customer", () => {
@@ -120,7 +195,7 @@ describe("storage engine — rules & edge cases", () => {
 
   it("ceramic upgrade prices under the length cap but is rejected above it", () => {
     const ok = calculateQuote({ serviceLine: "storage", items: [{ serviceId: "ceramic_upgrade", lengthFt: 24 }] });
-    expect(ok.lineItems[0].amountCents).toBe(204000); // 8500*24
+    expect(ok.lineItems[0].amountCents).toBe(204000); // 8500*24 (rate unchanged)
     expect(() =>
       calculateQuote({ serviceLine: "storage", items: [{ serviceId: "ceramic_upgrade", lengthFt: 30 }] }),
     ).toThrow(/not available above 26/);
@@ -135,8 +210,8 @@ describe("storage engine — rules & edge cases", () => {
     const ceramic = r.lineItems.find((l) => l.serviceId === "ceramic_upgrade")!;
     expect(ceramic.bundleEligible).toBe(false);
     // Discount only on storage+wrap; ceramic added at full price.
-    expect(r.bundle!.eligibleSubtotalCents).toBe(153600);
-    expect(r.subtotalCents).toBe(141312 + 204000);
+    expect(r.bundle!.eligibleSubtotalCents).toBe(180000);
+    expect(r.subtotalCents).toBe(165600 + 204000);
   });
 
   it("rejects zero / absurd / unknown inputs cleanly", () => {
@@ -161,9 +236,9 @@ describe("storage engine — rules & edge cases", () => {
       });
     const a = build([{ serviceId: "winterization_inboard", engineCount: 2 }, { serviceId: "winterization_outboard", engineCount: 1 }]);
     const b = build([{ serviceId: "winterization_outboard", engineCount: 1 }, { serviceId: "winterization_inboard", engineCount: 2 }]);
-    // À-la-carte 382125 → 12% off the full eligible total → 336270, regardless of item order.
-    expect(a.subtotalCents).toBe(336270);
-    expect(b.subtotalCents).toBe(336270);
+    // À-la-carte 428900 → 12% off the full eligible total → 377432, regardless of item order.
+    expect(a.subtotalCents).toBe(377432);
+    expect(b.subtotalCents).toBe(377432);
     expect(a.lineItems.filter((l) => l.serviceId.startsWith("winterization_")).every((l) => l.bundleEligible)).toBe(true);
   });
 });
