@@ -165,11 +165,11 @@
   "storage": {
     "currency": "CAD",
     "services": {
-      "outdoor_storage": { "type": "per_foot", "rateCents": 4600, "minimumCents": 69000, "label": "Outdoor winter storage (season)", "hullSurchargeEligible": true },
-      "shrink_wrap": { "type": "per_foot", "rateCents": 1800, "minimumCents": 27000, "label": "Shrink wrapping", "hullSurchargeEligible": true },
-      "winterization_outboard": { "type": "flat_per_engine", "rateCents": 22500, "additionalEngineMultiplier": 0.75, "label": "Winterization — outboard" },
-      "winterization_sterndrive": { "type": "flat_per_engine", "rateCents": 35000, "additionalEngineMultiplier": 0.75, "label": "Winterization — sterndrive" },
-      "winterization_inboard": { "type": "flat_per_engine", "rateCents": 39500, "additionalEngineMultiplier": 0.75, "label": "Winterization — inboard" },
+      "outdoor_storage": { "type": "per_foot", "rateCents": 5000, "minimumCents": 75000, "label": "Outdoor winter storage (season)", "hullSurchargeEligible": true },
+      "shrink_wrap": { "type": "per_foot", "rateCents": 2500, "minimumCents": 37500, "label": "Shrink wrapping", "hullSurchargeEligible": true },
+      "winterization_outboard": { "type": "flat_per_engine", "rateCents": 27500, "additionalEngineMultiplier": 0.75, "label": "Winterization — outboard" },
+      "winterization_sterndrive": { "type": "flat_per_engine", "rateCents": 40000, "additionalEngineMultiplier": 0.75, "label": "Winterization — sterndrive" },
+      "winterization_inboard": { "type": "flat_per_engine", "rateCents": 44500, "additionalEngineMultiplier": 0.75, "label": "Winterization — inboard" },
       "fall_detail": { "type": "per_foot", "rateCents": 2400, "minimumCents": 36000, "label": "Fall detail (wash & wax)", "hullSurchargeEligible": false },
       "spring_commissioning": { "type": "flat", "rateCents": 26500, "label": "Spring commissioning" },
       "ceramic_upgrade": { "type": "per_foot", "rateCents": 8500, "minimumCents": 0, "label": "Winter ceramic coating upgrade", "maxLengthFt": 26, "upsellOnly": true, "hullSurchargeEligible": false }
