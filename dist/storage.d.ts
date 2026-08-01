@@ -5,6 +5,8 @@ export interface QuoteItemInput {
     lengthFt?: number;
     engineType?: EngineType;
     engineCount?: number;
+    /** Unit count for per_unit services (e.g. number of batteries). Defaults to 1. */
+    quantity?: number;
     options?: Record<string, unknown>;
 }
 export interface QuoteInput {
@@ -26,6 +28,8 @@ export interface QuoteLineDetail {
     engineCount?: number;
     additionalEngineMultiplier?: number;
     additionalEngineUnitCents?: number;
+    /** Unit count for per_unit services (e.g. batteries). */
+    unitCount?: number;
 }
 export interface QuoteLineItem {
     serviceId: string;

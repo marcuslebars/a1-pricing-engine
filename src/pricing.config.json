@@ -172,7 +172,10 @@
       "winterization_inboard": { "type": "flat_per_engine", "rateCents": 44500, "additionalEngineMultiplier": 0.75, "label": "Winterization — inboard" },
       "fall_detail": { "type": "per_foot", "rateCents": 2400, "minimumCents": 36000, "label": "Fall detail (wash & wax)", "hullSurchargeEligible": false },
       "spring_commissioning": { "type": "flat", "rateCents": 26500, "label": "Spring commissioning" },
-      "ceramic_upgrade": { "type": "per_foot", "rateCents": 8500, "minimumCents": 0, "label": "Winter ceramic coating upgrade", "maxLengthFt": 26, "upsellOnly": true, "hullSurchargeEligible": false }
+      "ceramic_upgrade": { "type": "per_foot", "rateCents": 8500, "minimumCents": 0, "label": "Winter ceramic coating upgrade", "maxLengthFt": 26, "upsellOnly": true, "hullSurchargeEligible": false },
+      "battery_storage": { "type": "per_unit", "rateCents": 10000, "unitLabel": "battery", "label": "Battery storage & charging" },
+      "trailer_storage": { "type": "flat", "rateCents": 40000, "label": "Trailer storage (season)" },
+      "spring_wrap_removal": { "type": "tiered_by_length", "label": "Spring wrap removal & disposal", "tiers": [ { "maxFt": 26, "rateCents": 15000 }, { "maxFt": null, "rateCents": 20000 } ] }
     },
     "hullSurcharges": {
       "pontoon": { "perFootCents": 800 },

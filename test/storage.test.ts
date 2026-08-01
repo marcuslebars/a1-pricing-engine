@@ -242,3 +242,77 @@ describe("storage engine — rules & edge cases", () => {
     expect(a.lineItems.filter((l) => l.serviceId.startsWith("winterization_")).every((l) => l.bundleEligible)).toBe(true);
   });
 });
+
+// v1.2.0 add-on services (additive, API-compatible): battery storage (per_unit,
+// $100 ea), trailer storage (flat, $400), spring wrap removal (tiered_by_length,
+// $150 ≤26ft / $200 ≥27ft). All are add-ons OUTSIDE the bundles — never
+// discounted, never required for a bundle.
+describe("storage engine — v1.2.0 add-on services", () => {
+  const battery = (quantity?: number): QuoteItemInput => ({ serviceId: "battery_storage", quantity });
+  const wrapRemoval = (lengthFt: number): QuoteItemInput => ({ serviceId: "spring_wrap_removal", lengthFt });
+  const oneAmt = (item: QuoteItemInput) => calculateQuote({ serviceLine: "storage", items: [item] }).lineItems[0];
+
+  it("battery storage is $100 per battery (default 1 / 1 / 2 / 4)", () => {
+    expect(oneAmt(battery()).amountCents).toBe(10000); // quantity defaults to 1
+    expect(oneAmt(battery(1)).amountCents).toBe(10000);
+    expect(oneAmt(battery(2)).amountCents).toBe(20000);
+    expect(oneAmt(battery(4)).amountCents).toBe(40000);
+    expect(oneAmt(battery(2)).detail.unitCount).toBe(2);
+    expect(oneAmt(battery(2)).bundleEligible).toBe(false);
+  });
+
+  it("trailer storage is a flat $400", () => {
+    const line = oneAmt({ serviceId: "trailer_storage" });
+    expect(line.amountCents).toBe(40000);
+    expect(line.detail.type).toBe("flat");
+    expect(line.bundleEligible).toBe(false);
+  });
+
+  it("spring wrap removal is $150 up to 26 ft (20 / 24 / 26)", () => {
+    expect(oneAmt(wrapRemoval(20)).amountCents).toBe(15000);
+    expect(oneAmt(wrapRemoval(24)).amountCents).toBe(15000);
+    expect(oneAmt(wrapRemoval(26)).amountCents).toBe(15000);
+  });
+
+  it("spring wrap removal is $200 at 27 ft and over (27 / 30 / 38)", () => {
+    expect(oneAmt(wrapRemoval(27)).amountCents).toBe(20000);
+    expect(oneAmt(wrapRemoval(30)).amountCents).toBe(20000);
+    expect(oneAmt(wrapRemoval(38)).amountCents).toBe(20000);
+  });
+
+  it("does not change any existing rate — storage $50/ft, shrink $25/ft, winterization $400", () => {
+    expect(oneAmt(storage(24)).amountCents).toBe(120000);
+    expect(oneAmt(wrap(24)).amountCents).toBe(60000);
+    expect(oneAmt({ serviceId: "winterization_sterndrive", engineType: "sterndrive" }).amountCents).toBe(40000);
+  });
+
+  // 24 ft sterndrive: storage $1,200 + wrap $600 + winterization $400 + trailer
+  // $400 + 2 batteries $200 + wrap removal (≤26) $150 = $2,950.
+  const fullCart: QuoteItemInput[] = [
+    storage(24),
+    wrap(24),
+    { serviceId: "winterization_sterndrive", engineType: "sterndrive", engineCount: 1 },
+    { serviceId: "trailer_storage" },
+    battery(2),
+    wrapRemoval(24),
+  ];
+
+  it("the full six-service cart totals $2,950 à-la-carte", () => {
+    expect(calculateQuote({ serviceLine: "storage", items: fullCart }).aLaCarteSubtotalCents).toBe(295000);
+  });
+
+  it("Winter Ready Plus discounts ONLY the storage+wrap+winterization trio → $2,730", () => {
+    const r = calculateQuote({ serviceLine: "storage", bundleId: "winter_ready_plus", items: fullCart });
+    expect(r.bundle!.eligibleSubtotalCents).toBe(220000); // trio only
+    expect(r.bundleSavingsCents).toBe(22000); // 10% of $2,200
+    expect(r.subtotalCents).toBe(273000); // $2,950 − $220
+    for (const id of ["trailer_storage", "battery_storage", "spring_wrap_removal"]) {
+      expect(r.lineItems.find((l) => l.serviceId === id)!.bundleEligible).toBe(false);
+    }
+  });
+
+  it("rejects an invalid battery quantity", () => {
+    expect(() => calculateQuote({ serviceLine: "storage", items: [battery(0)] })).toThrow(/quantity/);
+    expect(() => calculateQuote({ serviceLine: "storage", items: [{ serviceId: "battery_storage", quantity: 2.5 }] })).toThrow(/quantity/);
+  });
+});

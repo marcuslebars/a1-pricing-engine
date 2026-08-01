@@ -22,12 +22,15 @@ export type EngineType = "outboard" | "sterndrive" | "inboard";
 // Guards against zero / absurd inputs.
 const MAX_LENGTH_FT = 100;
 const MAX_ENGINES = 8;
+const MAX_QUANTITY = 20;
 
 export interface QuoteItemInput {
   serviceId: string;
   lengthFt?: number;
   engineType?: EngineType;
   engineCount?: number;
+  /** Unit count for per_unit services (e.g. number of batteries). Defaults to 1. */
+  quantity?: number;
   options?: Record<string, unknown>;
 }
 
@@ -51,6 +54,8 @@ export interface QuoteLineDetail {
   engineCount?: number;
   additionalEngineMultiplier?: number;
   additionalEngineUnitCents?: number;
+  /** Unit count for per_unit services (e.g. batteries). */
+  unitCount?: number;
 }
 
 export interface QuoteLineItem {
@@ -115,6 +120,17 @@ function requireEngineCount(item: QuoteItemInput): number {
   return count;
 }
 
+function requirePositiveQuantity(item: QuoteItemInput, max: number): number {
+  const qty = item.quantity ?? 1;
+  if (!Number.isInteger(qty) || qty < 1) {
+    throw new RangeError(`"${item.serviceId}" requires a quantity >= 1 (got ${String(item.quantity)}).`);
+  }
+  if (qty > max) {
+    throw new RangeError(`"${item.serviceId}" quantity ${qty} exceeds the ${max} maximum.`);
+  }
+  return qty;
+}
+
 function hullSurchargePerFoot(hullType: string | undefined, eligible: boolean): number {
   if (!eligible || !hullType) return 0;
   return STORAGE.hullSurcharges[hullType]?.perFootCents ?? 0;
@@ -165,6 +181,37 @@ function computeLine(item: QuoteItemInput, hullType: string | undefined): QuoteL
         additionalEngineMultiplier: svc.additionalEngineMultiplier,
         additionalEngineUnitCents: addUnit,
       },
+    };
+  }
+
+  if (svc.type === "per_unit") {
+    const qty = requirePositiveQuantity(item, svc.maxQuantity ?? MAX_QUANTITY);
+    const amount = svc.rateCents * qty;
+    const description = qty > 1 ? `${svc.label} — ${qty} × ${formatCents(svc.rateCents)}/${svc.unitLabel}` : svc.label;
+    return {
+      serviceId: item.serviceId,
+      label: svc.label,
+      description,
+      quantity: 1,
+      unitPriceCents: amount,
+      amountCents: amount,
+      bundleEligible: false,
+      detail: { type: "per_unit", rateCents: svc.rateCents, unitCount: qty },
+    };
+  }
+
+  if (svc.type === "tiered_by_length") {
+    const tierLen = requirePositiveLength(item);
+    const tier = svc.tiers.find((t) => t.maxFt == null || tierLen <= t.maxFt) ?? svc.tiers[svc.tiers.length - 1];
+    return {
+      serviceId: item.serviceId,
+      label: svc.label,
+      description: `${svc.label} — ${tierLen}ft (${formatCents(tier.rateCents)})`,
+      quantity: 1,
+      unitPriceCents: tier.rateCents,
+      amountCents: tier.rateCents,
+      bundleEligible: false,
+      detail: { type: "tiered_by_length", rateCents: tier.rateCents, lengthFt: tierLen },
     };
   }
 
