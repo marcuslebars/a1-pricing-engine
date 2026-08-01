@@ -21,6 +21,7 @@ const money_1 = require("./money");
 // Guards against zero / absurd inputs.
 const MAX_LENGTH_FT = 100;
 const MAX_ENGINES = 8;
+const MAX_QUANTITY = 20;
 function requirePositiveLength(item) {
     const len = item.lengthFt;
     if (typeof len !== "number" || !Number.isFinite(len) || len <= 0) {
@@ -40,6 +41,16 @@ function requireEngineCount(item) {
         throw new RangeError(`"${item.serviceId}" engine count ${count} exceeds the ${MAX_ENGINES} maximum.`);
     }
     return count;
+}
+function requirePositiveQuantity(item, max) {
+    const qty = item.quantity ?? 1;
+    if (!Number.isInteger(qty) || qty < 1) {
+        throw new RangeError(`"${item.serviceId}" requires a quantity >= 1 (got ${String(item.quantity)}).`);
+    }
+    if (qty > max) {
+        throw new RangeError(`"${item.serviceId}" quantity ${qty} exceeds the ${max} maximum.`);
+    }
+    return qty;
 }
 function hullSurchargePerFoot(hullType, eligible) {
     if (!eligible || !hullType)
@@ -86,6 +97,35 @@ function computeLine(item, hullType) {
                 additionalEngineMultiplier: svc.additionalEngineMultiplier,
                 additionalEngineUnitCents: addUnit,
             },
+        };
+    }
+    if (svc.type === "per_unit") {
+        const qty = requirePositiveQuantity(item, svc.maxQuantity ?? MAX_QUANTITY);
+        const amount = svc.rateCents * qty;
+        const description = qty > 1 ? `${svc.label} — ${qty} × ${(0, money_1.formatCents)(svc.rateCents)}/${svc.unitLabel}` : svc.label;
+        return {
+            serviceId: item.serviceId,
+            label: svc.label,
+            description,
+            quantity: 1,
+            unitPriceCents: amount,
+            amountCents: amount,
+            bundleEligible: false,
+            detail: { type: "per_unit", rateCents: svc.rateCents, unitCount: qty },
+        };
+    }
+    if (svc.type === "tiered_by_length") {
+        const tierLen = requirePositiveLength(item);
+        const tier = svc.tiers.find((t) => t.maxFt == null || tierLen <= t.maxFt) ?? svc.tiers[svc.tiers.length - 1];
+        return {
+            serviceId: item.serviceId,
+            label: svc.label,
+            description: `${svc.label} — ${tierLen}ft (${(0, money_1.formatCents)(tier.rateCents)})`,
+            quantity: 1,
+            unitPriceCents: tier.rateCents,
+            amountCents: tier.rateCents,
+            bundleEligible: false,
+            detail: { type: "tiered_by_length", rateCents: tier.rateCents, lengthFt: tierLen },
         };
     }
     // per_foot

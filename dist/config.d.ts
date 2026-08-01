@@ -123,7 +123,29 @@ export interface StorageFlatPerEngineService {
     additionalEngineMultiplier: number;
     label: string;
 }
-export type StorageService = StoragePerFootService | StorageFlatService | StorageFlatPerEngineService;
+/** Per-unit quantity pricing: rateCents × quantity (e.g. batteries at $100 each). */
+export interface StoragePerUnitService {
+    type: "per_unit";
+    rateCents: number;
+    /** Singular noun for one unit, e.g. "battery" — used in line descriptions. */
+    unitLabel: string;
+    label: string;
+    /** Optional sanity cap on quantity. */
+    maxQuantity?: number;
+}
+/**
+ * Flat price selected by a boat-length tier — the engine picks the first tier
+ * whose `maxFt` covers the boat length (a `null` maxFt is the open-ended top tier).
+ */
+export interface StorageTieredByLengthService {
+    type: "tiered_by_length";
+    tiers: {
+        maxFt: number | null;
+        rateCents: number;
+    }[];
+    label: string;
+}
+export type StorageService = StoragePerFootService | StorageFlatService | StorageFlatPerEngineService | StoragePerUnitService | StorageTieredByLengthService;
 export interface StorageBundle {
     label: string;
     services: string[];
@@ -370,6 +392,28 @@ export declare const RAW_CONFIG: {
                 maxLengthFt: number;
                 upsellOnly: boolean;
                 hullSurchargeEligible: boolean;
+            };
+            battery_storage: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+            };
+            trailer_storage: {
+                type: string;
+                rateCents: number;
+                label: string;
+            };
+            spring_wrap_removal: {
+                type: string;
+                label: string;
+                tiers: ({
+                    maxFt: number;
+                    rateCents: number;
+                } | {
+                    maxFt: null;
+                    rateCents: number;
+                })[];
             };
         };
         hullSurcharges: {
