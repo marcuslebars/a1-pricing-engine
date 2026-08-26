@@ -132,12 +132,26 @@ export interface StorageTieredByLengthService {
   label: string;
 }
 
+/**
+ * Distance pricing for transport beyond the furthest quoted band: rateCents × km.
+ * Bands (local / regional / extended) are flat per-trip `per_unit` services; this
+ * covers the "beyond — quoted per km" case only.
+ */
+export interface StoragePerKmService {
+  type: "per_km";
+  rateCents: number;
+  label: string;
+  /** Optional sanity cap on distance. */
+  maxDistanceKm?: number;
+}
+
 export type StorageService =
   | StoragePerFootService
   | StorageFlatService
   | StorageFlatPerEngineService
   | StoragePerUnitService
-  | StorageTieredByLengthService;
+  | StorageTieredByLengthService
+  | StoragePerKmService;
 
 export interface StorageBundle {
   label: string;

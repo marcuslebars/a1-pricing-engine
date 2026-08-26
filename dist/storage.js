@@ -9,6 +9,8 @@
 //   • per_foot:        max(rate x lengthFt, minimum), then + hull surcharge if flagged
 //   • flat:            flat rate
 //   • flat_per_engine: engine 1 at full rate; engines 2+ at the configured multiplier
+//   • per_unit:        rate x quantity (batteries, PWCs, transport trips, vessel-months)
+//   • per_km:          rate x distanceKm (transport beyond the furthest band)
 //   • hull surcharge:  pontoon/tritoon, per-foot, on hullSurchargeEligible services only
 //   • bundles:         discount % applied to the combined eligible total; the à-la-carte
 //                      total and the savings are always returned
@@ -22,6 +24,7 @@ const money_1 = require("./money");
 const MAX_LENGTH_FT = 100;
 const MAX_ENGINES = 8;
 const MAX_QUANTITY = 20;
+const MAX_DISTANCE_KM = 2000;
 function requirePositiveLength(item) {
     const len = item.lengthFt;
     if (typeof len !== "number" || !Number.isFinite(len) || len <= 0) {
@@ -51,6 +54,16 @@ function requirePositiveQuantity(item, max) {
         throw new RangeError(`"${item.serviceId}" quantity ${qty} exceeds the ${max} maximum.`);
     }
     return qty;
+}
+function requirePositiveDistance(item, max) {
+    const km = item.distanceKm;
+    if (typeof km !== "number" || !Number.isFinite(km) || km <= 0) {
+        throw new RangeError(`"${item.serviceId}" requires a positive distanceKm (got ${String(km)}).`);
+    }
+    if (km > max) {
+        throw new RangeError(`"${item.serviceId}" distance ${km}km exceeds the ${max}km maximum.`);
+    }
+    return km;
 }
 function hullSurchargePerFoot(hullType, eligible) {
     if (!eligible || !hullType)
@@ -112,6 +125,20 @@ function computeLine(item, hullType) {
             amountCents: amount,
             bundleEligible: false,
             detail: { type: "per_unit", rateCents: svc.rateCents, unitCount: qty },
+        };
+    }
+    if (svc.type === "per_km") {
+        const km = requirePositiveDistance(item, svc.maxDistanceKm ?? MAX_DISTANCE_KM);
+        const amount = Math.round(svc.rateCents * km);
+        return {
+            serviceId: item.serviceId,
+            label: svc.label,
+            description: `${svc.label} — ${km} km × ${(0, money_1.formatCents)(svc.rateCents)}/km`,
+            quantity: 1,
+            unitPriceCents: amount,
+            amountCents: amount,
+            bundleEligible: false,
+            detail: { type: "per_km", rateCents: svc.rateCents, distanceKm: km },
         };
     }
     if (svc.type === "tiered_by_length") {

@@ -7,6 +7,8 @@ export interface QuoteItemInput {
     engineCount?: number;
     /** Unit count for per_unit services (e.g. number of batteries). Defaults to 1. */
     quantity?: number;
+    /** Distance in km for per_km services (transport beyond the extended band). */
+    distanceKm?: number;
     options?: Record<string, unknown>;
 }
 export interface QuoteInput {
@@ -30,6 +32,8 @@ export interface QuoteLineDetail {
     additionalEngineUnitCents?: number;
     /** Unit count for per_unit services (e.g. batteries). */
     unitCount?: number;
+    /** Distance in km for per_km services. */
+    distanceKm?: number;
 }
 export interface QuoteLineItem {
     serviceId: string;
