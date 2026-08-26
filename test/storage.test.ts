@@ -244,7 +244,7 @@ describe("storage engine — rules & edge cases", () => {
 });
 
 // v1.2.0 add-on services (additive, API-compatible): battery storage (per_unit,
-// $100 ea), trailer storage (flat, $400), spring wrap removal (tiered_by_length,
+// $100 ea), trailer storage (flat, $200 as of v1.3.0), spring wrap removal (tiered_by_length,
 // $150 ≤26ft / $200 ≥27ft). All are add-ons OUTSIDE the bundles — never
 // discounted, never required for a bundle.
 describe("storage engine — v1.2.0 add-on services", () => {
@@ -261,9 +261,9 @@ describe("storage engine — v1.2.0 add-on services", () => {
     expect(oneAmt(battery(2)).bundleEligible).toBe(false);
   });
 
-  it("trailer storage is a flat $400", () => {
+  it("trailer storage is a flat $200 (v1.3.0 ratified rate, was $400)", () => {
     const line = oneAmt({ serviceId: "trailer_storage" });
-    expect(line.amountCents).toBe(40000);
+    expect(line.amountCents).toBe(20000);
     expect(line.detail.type).toBe("flat");
     expect(line.bundleEligible).toBe(false);
   });
@@ -287,7 +287,9 @@ describe("storage engine — v1.2.0 add-on services", () => {
   });
 
   // 24 ft sterndrive: storage $1,200 + wrap $600 + winterization $400 + trailer
-  // $400 + 2 batteries $200 + wrap removal (≤26) $150 = $2,950.
+  // $200 + 2 batteries $200 + wrap removal (≤26) $150 = $2,750.
+  // NOTE: this is a synthetic cart, NOT the runabout+Waverunner package — it
+  // happened to total $2,950 while the trailer was $400. Unrelated to that quote.
   const fullCart: QuoteItemInput[] = [
     storage(24),
     wrap(24),
@@ -297,15 +299,15 @@ describe("storage engine — v1.2.0 add-on services", () => {
     wrapRemoval(24),
   ];
 
-  it("the full six-service cart totals $2,950 à-la-carte", () => {
-    expect(calculateQuote({ serviceLine: "storage", items: fullCart }).aLaCarteSubtotalCents).toBe(295000);
+  it("the full six-service cart totals $2,750 à-la-carte", () => {
+    expect(calculateQuote({ serviceLine: "storage", items: fullCart }).aLaCarteSubtotalCents).toBe(275000);
   });
 
-  it("Winter Ready Plus discounts ONLY the storage+wrap+winterization trio → $2,730", () => {
+  it("Winter Ready Plus discounts ONLY the storage+wrap+winterization trio → $2,530", () => {
     const r = calculateQuote({ serviceLine: "storage", bundleId: "winter_ready_plus", items: fullCart });
     expect(r.bundle!.eligibleSubtotalCents).toBe(220000); // trio only
     expect(r.bundleSavingsCents).toBe(22000); // 10% of $2,200
-    expect(r.subtotalCents).toBe(273000); // $2,950 − $220
+    expect(r.subtotalCents).toBe(253000); // $2,750 − $220
     for (const id of ["trailer_storage", "battery_storage", "spring_wrap_removal"]) {
       expect(r.lineItems.find((l) => l.serviceId === id)!.bundleEligible).toBe(false);
     }
@@ -314,5 +316,99 @@ describe("storage engine — v1.2.0 add-on services", () => {
   it("rejects an invalid battery quantity", () => {
     expect(() => calculateQuote({ serviceLine: "storage", items: [battery(0)] })).toThrow(/quantity/);
     expect(() => calculateQuote({ serviceLine: "storage", items: [{ serviceId: "battery_storage", quantity: 2.5 }] })).toThrow(/quantity/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v1.3.0 — rates ratified for the 2026/27 season.
+//
+//   transport bands (per trip)   local $150 / regional $250 / extended $375
+//   transport beyond band        $3.50/km (per_km)
+//   trailer provided             $200/season  (rate change: was $400)
+//   PWC storage                  $450/season/PWC
+//   PWC winterization            $175/PWC
+//   extended storage             $100 per vessel per month after April 30
+//   oil change                   outboard $175/engine, PWC $150/PWC
+//   battery storage              $100/battery (unchanged, shipped in v1.2.0)
+// ─────────────────────────────────────────────────────────────────────────────
+describe("storage engine — v1.3.0 ratified rates", () => {
+  const one = (item: QuoteItemInput) =>
+    calculateQuote({ serviceLine: "storage", items: [item] }).lineItems[0];
+
+  it("transport bands price per trip", () => {
+    expect(one({ serviceId: "transport_local" }).amountCents).toBe(15000);
+    expect(one({ serviceId: "transport_regional" }).amountCents).toBe(25000);
+    expect(one({ serviceId: "transport_extended" }).amountCents).toBe(37500);
+  });
+
+  it("transport bands scale by trip count (round trip = 2)", () => {
+    expect(one({ serviceId: "transport_regional", quantity: 2 }).amountCents).toBe(50000);
+  });
+
+  it("transport beyond the extended band is $3.50/km", () => {
+    const line = one({ serviceId: "transport_beyond_per_km", distanceKm: 120 });
+    expect(line.amountCents).toBe(42000); // 120 × $3.50
+    expect(line.detail.distanceKm).toBe(120);
+  });
+
+  it("per_km requires a positive, sane distance", () => {
+    expect(() => one({ serviceId: "transport_beyond_per_km" })).toThrow(/distanceKm/);
+    expect(() => one({ serviceId: "transport_beyond_per_km", distanceKm: 0 })).toThrow(/distanceKm/);
+    expect(() => one({ serviceId: "transport_beyond_per_km", distanceKm: 5000 })).toThrow(/exceeds/);
+  });
+
+  it("PWC storage and winterization price per PWC", () => {
+    expect(one({ serviceId: "pwc_storage" }).amountCents).toBe(45000);
+    expect(one({ serviceId: "pwc_winterization" }).amountCents).toBe(17500);
+    expect(one({ serviceId: "pwc_storage", quantity: 2 }).amountCents).toBe(90000);
+  });
+
+  it("oil changes: outboard $175/engine, PWC $150/PWC", () => {
+    expect(one({ serviceId: "oil_change_outboard" }).amountCents).toBe(17500);
+    expect(one({ serviceId: "oil_change_pwc" }).amountCents).toBe(15000);
+    expect(one({ serviceId: "oil_change_outboard", quantity: 2 }).amountCents).toBe(35000);
+  });
+
+  it("extended storage is $100 per vessel-month after April 30", () => {
+    expect(one({ serviceId: "extended_storage", quantity: 1 }).amountCents).toBe(10000);
+    // 2 vessels × 3 months = 6 vessel-months.
+    expect(one({ serviceId: "extended_storage", quantity: 6 }).amountCents).toBe(60000);
+  });
+
+  it("battery storage is unchanged at $100/battery", () => {
+    expect(one({ serviceId: "battery_storage", quantity: 3 }).amountCents).toBe(30000);
+  });
+
+  // ── Golden fixture (a): the plan's 24ft anchor ────────────────────────────
+  // 24ft × $50 storage + 24ft × $25 wrap + outboard winterization $275 = $2,075.
+  it("GOLDEN (a): 24ft storage + wrap + outboard winterization = $2,075 subtotal", () => {
+    const r = calculateQuote({
+      serviceLine: "storage",
+      items: [
+        { serviceId: "outdoor_storage", lengthFt: 24 },
+        { serviceId: "shrink_wrap", lengthFt: 24 },
+        { serviceId: "winterization_outboard", engineType: "outboard", engineCount: 1 },
+      ],
+    });
+    expect(r.lineItems.map((l) => l.amountCents)).toEqual([120000, 60000, 27500]);
+    expect(r.subtotalCents).toBe(207500);
+  });
+
+  // ── Golden fixture (d1): PWC-only ─────────────────────────────────────────
+  it("GOLDEN (d1): PWC-only (storage + winterization) = $625 subtotal", () => {
+    const r = calculateQuote({
+      serviceLine: "storage",
+      items: [{ serviceId: "pwc_storage" }, { serviceId: "pwc_winterization" }],
+    });
+    expect(r.subtotalCents).toBe(62500);
+  });
+
+  // ── Golden fixture (d2): extended storage ─────────────────────────────────
+  it("GOLDEN (d2): one vessel stored 2 months past April 30 = $200 subtotal", () => {
+    const r = calculateQuote({
+      serviceLine: "storage",
+      items: [{ serviceId: "extended_storage", quantity: 2 }],
+    });
+    expect(r.subtotalCents).toBe(20000);
   });
 });

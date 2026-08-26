@@ -174,7 +174,18 @@
       "spring_commissioning": { "type": "flat", "rateCents": 26500, "label": "Spring commissioning" },
       "ceramic_upgrade": { "type": "per_foot", "rateCents": 8500, "minimumCents": 0, "label": "Winter ceramic coating upgrade", "maxLengthFt": 26, "upsellOnly": true, "hullSurchargeEligible": false },
       "battery_storage": { "type": "per_unit", "rateCents": 10000, "unitLabel": "battery", "label": "Battery storage & charging" },
-      "trailer_storage": { "type": "flat", "rateCents": 40000, "label": "Trailer storage (season)" },
+      "trailer_storage": { "type": "flat", "rateCents": 20000, "label": "Trailer storage (season)" },
+
+      "pwc_storage": { "type": "per_unit", "rateCents": 45000, "unitLabel": "PWC", "label": "PWC storage (season)", "maxQuantity": 6 },
+      "pwc_winterization": { "type": "per_unit", "rateCents": 17500, "unitLabel": "PWC", "label": "PWC winterization", "maxQuantity": 6 },
+      "oil_change_outboard": { "type": "per_unit", "rateCents": 17500, "unitLabel": "engine", "label": "Oil change — outboard", "maxQuantity": 8 },
+      "oil_change_pwc": { "type": "per_unit", "rateCents": 15000, "unitLabel": "PWC", "label": "Oil change — PWC", "maxQuantity": 6 },
+      "extended_storage": { "type": "per_unit", "rateCents": 10000, "unitLabel": "vessel-month", "label": "Extended storage (after April 30)", "maxQuantity": 24 },
+
+      "transport_local": { "type": "per_unit", "rateCents": 15000, "unitLabel": "trip", "label": "Transport — local", "maxQuantity": 4 },
+      "transport_regional": { "type": "per_unit", "rateCents": 25000, "unitLabel": "trip", "label": "Transport — regional", "maxQuantity": 4 },
+      "transport_extended": { "type": "per_unit", "rateCents": 37500, "unitLabel": "trip", "label": "Transport — extended", "maxQuantity": 4 },
+      "transport_beyond_per_km": { "type": "per_km", "rateCents": 350, "label": "Transport — beyond extended band", "maxDistanceKm": 2000 },
       "spring_wrap_removal": { "type": "tiered_by_length", "label": "Spring wrap removal & disposal", "tiers": [ { "maxFt": 26, "rateCents": 15000 }, { "maxFt": null, "rateCents": 20000 } ] }
     },
     "hullSurcharges": {

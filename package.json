@@ -1,6 +1,6 @@
 {
   "name": "@a1/pricing-engine",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Single source of truth for A1 Marine pricing — Marine Care detailing/coatings + Marine Storage. Consumed by both a1marinecare.ca and a1marinestorage.ca.",
   "license": "UNLICENSED",
   "private": true,

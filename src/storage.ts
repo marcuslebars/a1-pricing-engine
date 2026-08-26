@@ -8,6 +8,8 @@
 //   • per_foot:        max(rate x lengthFt, minimum), then + hull surcharge if flagged
 //   • flat:            flat rate
 //   • flat_per_engine: engine 1 at full rate; engines 2+ at the configured multiplier
+//   • per_unit:        rate x quantity (batteries, PWCs, transport trips, vessel-months)
+//   • per_km:          rate x distanceKm (transport beyond the furthest band)
 //   • hull surcharge:  pontoon/tritoon, per-foot, on hullSurchargeEligible services only
 //   • bundles:         discount % applied to the combined eligible total; the à-la-carte
 //                      total and the savings are always returned
@@ -23,6 +25,7 @@ export type EngineType = "outboard" | "sterndrive" | "inboard";
 const MAX_LENGTH_FT = 100;
 const MAX_ENGINES = 8;
 const MAX_QUANTITY = 20;
+const MAX_DISTANCE_KM = 2000;
 
 export interface QuoteItemInput {
   serviceId: string;
@@ -31,6 +34,8 @@ export interface QuoteItemInput {
   engineCount?: number;
   /** Unit count for per_unit services (e.g. number of batteries). Defaults to 1. */
   quantity?: number;
+  /** Distance in km for per_km services (transport beyond the extended band). */
+  distanceKm?: number;
   options?: Record<string, unknown>;
 }
 
@@ -56,6 +61,8 @@ export interface QuoteLineDetail {
   additionalEngineUnitCents?: number;
   /** Unit count for per_unit services (e.g. batteries). */
   unitCount?: number;
+  /** Distance in km for per_km services. */
+  distanceKm?: number;
 }
 
 export interface QuoteLineItem {
@@ -131,6 +138,17 @@ function requirePositiveQuantity(item: QuoteItemInput, max: number): number {
   return qty;
 }
 
+function requirePositiveDistance(item: QuoteItemInput, max: number): number {
+  const km = item.distanceKm;
+  if (typeof km !== "number" || !Number.isFinite(km) || km <= 0) {
+    throw new RangeError(`"${item.serviceId}" requires a positive distanceKm (got ${String(km)}).`);
+  }
+  if (km > max) {
+    throw new RangeError(`"${item.serviceId}" distance ${km}km exceeds the ${max}km maximum.`);
+  }
+  return km;
+}
+
 function hullSurchargePerFoot(hullType: string | undefined, eligible: boolean): number {
   if (!eligible || !hullType) return 0;
   return STORAGE.hullSurcharges[hullType]?.perFootCents ?? 0;
@@ -197,6 +215,21 @@ function computeLine(item: QuoteItemInput, hullType: string | undefined): QuoteL
       amountCents: amount,
       bundleEligible: false,
       detail: { type: "per_unit", rateCents: svc.rateCents, unitCount: qty },
+    };
+  }
+
+  if (svc.type === "per_km") {
+    const km = requirePositiveDistance(item, svc.maxDistanceKm ?? MAX_DISTANCE_KM);
+    const amount = Math.round(svc.rateCents * km);
+    return {
+      serviceId: item.serviceId,
+      label: svc.label,
+      description: `${svc.label} — ${km} km × ${formatCents(svc.rateCents)}/km`,
+      quantity: 1,
+      unitPriceCents: amount,
+      amountCents: amount,
+      bundleEligible: false,
+      detail: { type: "per_km", rateCents: svc.rateCents, distanceKm: km },
     };
   }
 

@@ -145,7 +145,19 @@ export interface StorageTieredByLengthService {
     }[];
     label: string;
 }
-export type StorageService = StoragePerFootService | StorageFlatService | StorageFlatPerEngineService | StoragePerUnitService | StorageTieredByLengthService;
+/**
+ * Distance pricing for transport beyond the furthest quoted band: rateCents × km.
+ * Bands (local / regional / extended) are flat per-trip `per_unit` services; this
+ * covers the "beyond — quoted per km" case only.
+ */
+export interface StoragePerKmService {
+    type: "per_km";
+    rateCents: number;
+    label: string;
+    /** Optional sanity cap on distance. */
+    maxDistanceKm?: number;
+}
+export type StorageService = StoragePerFootService | StorageFlatService | StorageFlatPerEngineService | StoragePerUnitService | StorageTieredByLengthService | StoragePerKmService;
 export interface StorageBundle {
     label: string;
     services: string[];
@@ -403,6 +415,68 @@ export declare const RAW_CONFIG: {
                 type: string;
                 rateCents: number;
                 label: string;
+            };
+            pwc_storage: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            pwc_winterization: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            oil_change_outboard: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            oil_change_pwc: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            extended_storage: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            transport_local: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            transport_regional: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            transport_extended: {
+                type: string;
+                rateCents: number;
+                unitLabel: string;
+                label: string;
+                maxQuantity: number;
+            };
+            transport_beyond_per_km: {
+                type: string;
+                rateCents: number;
+                label: string;
+                maxDistanceKm: number;
             };
             spring_wrap_removal: {
                 type: string;
