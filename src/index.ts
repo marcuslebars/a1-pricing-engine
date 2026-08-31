@@ -36,5 +36,16 @@ export type * from "./config";
 export { calculateQuote } from "./storage";
 export type * from "./storage";
 
+// ── Transport bands ──────────────────────────────────────────────────────────
+// Band DISTANCE boundaries live here, not in consuming repos: a km threshold
+// decides what a customer pays, so it is a pricing rule like any other.
+export {
+  TRANSPORT_BANDS,
+  transportBandForDistanceKm,
+  transportBandInfoForDistanceKm,
+  transportBandInfo,
+} from "./transport";
+export type * from "./transport";
+
 // ── Money helpers ────────────────────────────────────────────────────────────
 export { perFootCents, applyMinimum, discountCents, additionalEngineUnitCents, formatCents } from "./money";

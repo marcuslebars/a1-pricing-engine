@@ -120,6 +120,15 @@ export interface StoragePerUnitService {
   label: string;
   /** Optional sanity cap on quantity. */
   maxQuantity?: number;
+  /**
+   * Upper bound (inclusive, one-way km from the yard) of the distance band this
+   * service prices. Set on the transport_* services only.
+   *
+   * Deliberately NOT named maxDistanceKm: on a per_km service that field is a
+   * sanity cap on how far we will quote at all, which is a different thing from
+   * where one flat band ends and the next begins.
+   */
+  bandMaxKm?: number;
 }
 
 /**

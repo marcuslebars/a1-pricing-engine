@@ -4,4 +4,6 @@ export { CARE, STORAGE, RAW_CONFIG } from "./config";
 export type * from "./config";
 export { calculateQuote } from "./storage";
 export type * from "./storage";
+export { TRANSPORT_BANDS, transportBandForDistanceKm, transportBandInfoForDistanceKm, transportBandInfo, } from "./transport";
+export type * from "./transport";
 export { perFootCents, applyMinimum, discountCents, additionalEngineUnitCents, formatCents } from "./money";
