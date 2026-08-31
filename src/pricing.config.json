@@ -182,9 +182,9 @@
       "oil_change_pwc": { "type": "per_unit", "rateCents": 15000, "unitLabel": "PWC", "label": "Oil change — PWC", "maxQuantity": 6 },
       "extended_storage": { "type": "per_unit", "rateCents": 10000, "unitLabel": "vessel-month", "label": "Extended storage (after April 30)", "maxQuantity": 24 },
 
-      "transport_local": { "type": "per_unit", "rateCents": 15000, "unitLabel": "trip", "label": "Transport — local", "maxQuantity": 4 },
-      "transport_regional": { "type": "per_unit", "rateCents": 25000, "unitLabel": "trip", "label": "Transport — regional", "maxQuantity": 4 },
-      "transport_extended": { "type": "per_unit", "rateCents": 37500, "unitLabel": "trip", "label": "Transport — extended", "maxQuantity": 4 },
+      "transport_local": { "type": "per_unit", "rateCents": 15000, "unitLabel": "trip", "label": "Transport — local", "maxQuantity": 4, "bandMaxKm": 25 },
+      "transport_regional": { "type": "per_unit", "rateCents": 25000, "unitLabel": "trip", "label": "Transport — regional", "maxQuantity": 4, "bandMaxKm": 60 },
+      "transport_extended": { "type": "per_unit", "rateCents": 37500, "unitLabel": "trip", "label": "Transport — extended", "maxQuantity": 4, "bandMaxKm": 120 },
       "transport_beyond_per_km": { "type": "per_km", "rateCents": 350, "label": "Transport — beyond extended band", "maxDistanceKm": 2000 },
       "spring_wrap_removal": { "type": "tiered_by_length", "label": "Spring wrap removal & disposal", "tiers": [ { "maxFt": 26, "rateCents": 15000 }, { "maxFt": null, "rateCents": 20000 } ] }
     },

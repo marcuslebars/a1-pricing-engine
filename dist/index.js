@@ -10,7 +10,7 @@
 // Node's CommonJS named-export lexer when the built CJS package is imported from
 // an ESM context (the storage server runs this way).
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatCents = exports.additionalEngineUnitCents = exports.discountCents = exports.applyMinimum = exports.perFootCents = exports.calculateQuote = exports.RAW_CONFIG = exports.STORAGE = exports.CARE = exports.calculateTotal = exports.calculateBiweeklyMaintenance = exports.calculateWeeklyMaintenance = exports.calculateVinyl = exports.calculateBottomPainting = exports.calculateWetSanding = exports.calculateGraphene = exports.calculateCeramic = exports.calculateInterior = exports.calculateExterior = exports.calculateGelcoat = exports.getServiceStartingPriceLabel = exports.getServiceStartingRateBySlug = exports.SERVICE_STARTING_RATE_BY_SLUG = void 0;
+exports.formatCents = exports.additionalEngineUnitCents = exports.discountCents = exports.applyMinimum = exports.perFootCents = exports.transportBandInfo = exports.transportBandInfoForDistanceKm = exports.transportBandForDistanceKm = exports.TRANSPORT_BANDS = exports.calculateQuote = exports.RAW_CONFIG = exports.STORAGE = exports.CARE = exports.calculateTotal = exports.calculateBiweeklyMaintenance = exports.calculateWeeklyMaintenance = exports.calculateVinyl = exports.calculateBottomPainting = exports.calculateWetSanding = exports.calculateGraphene = exports.calculateCeramic = exports.calculateInterior = exports.calculateExterior = exports.calculateGelcoat = exports.getServiceStartingPriceLabel = exports.getServiceStartingRateBySlug = exports.SERVICE_STARTING_RATE_BY_SLUG = void 0;
 // ── Marine Care ──────────────────────────────────────────────────────────────
 var marine_care_1 = require("./marine-care");
 Object.defineProperty(exports, "SERVICE_STARTING_RATE_BY_SLUG", { enumerable: true, get: function () { return marine_care_1.SERVICE_STARTING_RATE_BY_SLUG; } });
@@ -35,6 +35,14 @@ Object.defineProperty(exports, "RAW_CONFIG", { enumerable: true, get: function (
 // ── Storage engine ───────────────────────────────────────────────────────────
 var storage_1 = require("./storage");
 Object.defineProperty(exports, "calculateQuote", { enumerable: true, get: function () { return storage_1.calculateQuote; } });
+// ── Transport bands ──────────────────────────────────────────────────────────
+// Band DISTANCE boundaries live here, not in consuming repos: a km threshold
+// decides what a customer pays, so it is a pricing rule like any other.
+var transport_1 = require("./transport");
+Object.defineProperty(exports, "TRANSPORT_BANDS", { enumerable: true, get: function () { return transport_1.TRANSPORT_BANDS; } });
+Object.defineProperty(exports, "transportBandForDistanceKm", { enumerable: true, get: function () { return transport_1.transportBandForDistanceKm; } });
+Object.defineProperty(exports, "transportBandInfoForDistanceKm", { enumerable: true, get: function () { return transport_1.transportBandInfoForDistanceKm; } });
+Object.defineProperty(exports, "transportBandInfo", { enumerable: true, get: function () { return transport_1.transportBandInfo; } });
 // ── Money helpers ────────────────────────────────────────────────────────────
 var money_1 = require("./money");
 Object.defineProperty(exports, "perFootCents", { enumerable: true, get: function () { return money_1.perFootCents; } });
